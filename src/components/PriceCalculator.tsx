@@ -307,38 +307,38 @@ const PriceCalculator: React.FC = () => {
       animate={{ opacity: 1, y: 0 }}
       className="space-y-8"
     >
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-4">
         <div className="flex items-center gap-3">
           <div className="p-3 bg-amber-100 dark:bg-amber-900/30 rounded-2xl">
             <Calculator className="text-amber-600 dark:text-amber-400 w-6 h-6" />
           </div>
           <div>
-            <h2 className="text-2xl font-bold tracking-tight">{t('price_calc')}</h2>
-            <p className="text-neutral-500 text-sm">Comprehensive jewellery price estimation</p>
+            <h2 className="text-xl md:text-2xl font-bold tracking-tight">{t('price_calc')}</h2>
+            <p className="text-neutral-500 text-xs md:text-sm">Comprehensive jewellery price estimation</p>
           </div>
         </div>
-        <div className="flex gap-2">
+        <div className="grid grid-cols-3 md:flex gap-2">
           <button 
             onClick={handleSave}
             disabled={isSaving}
-            className="flex items-center gap-2 px-6 py-3 bg-amber-500 text-white rounded-2xl font-semibold hover:opacity-90 transition-all disabled:opacity-50"
+            className="flex flex-col md:flex-row items-center justify-center gap-1 md:gap-2 p-3 md:px-6 md:py-3 bg-amber-500 text-white rounded-2xl font-semibold hover:opacity-90 transition-all disabled:opacity-50"
           >
             <Save className="w-5 h-5" />
-            {isSaving ? 'Saving...' : 'Save Calc'}
+            <span className="text-[10px] md:text-sm">{isSaving ? 'Saving...' : 'Save'}</span>
           </button>
           <button 
             onClick={shareWhatsApp}
-            className="flex items-center gap-2 px-6 py-3 bg-emerald-500 text-white rounded-2xl font-semibold hover:opacity-90 transition-all"
+            className="flex flex-col md:flex-row items-center justify-center gap-1 md:gap-2 p-3 md:px-6 md:py-3 bg-emerald-500 text-white rounded-2xl font-semibold hover:opacity-90 transition-all"
           >
             <MessageCircle className="w-5 h-5" />
-            Share
+            <span className="text-[10px] md:text-sm">Share</span>
           </button>
           <button 
             onClick={exportPDF}
-            className="flex items-center gap-2 px-6 py-3 bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 rounded-2xl font-semibold hover:opacity-90 transition-all"
+            className="flex flex-col md:flex-row items-center justify-center gap-1 md:gap-2 p-3 md:px-6 md:py-3 bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 rounded-2xl font-semibold hover:opacity-90 transition-all"
           >
             <FileText className="w-5 h-5" />
-            Invoice
+            <span className="text-[10px] md:text-sm">Invoice</span>
           </button>
         </div>
       </div>
@@ -384,6 +384,7 @@ const PriceCalculator: React.FC = () => {
                   <Scale className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400" />
                   <input 
                     type="number" 
+                    inputMode="decimal"
                     value={weight || ''} 
                     onChange={(e) => setWeight(Number(e.target.value))}
                     className="w-full bg-neutral-50 dark:bg-neutral-800 border-none rounded-2xl p-4 pl-12 text-lg font-semibold focus:ring-2 focus:ring-amber-500"
@@ -397,6 +398,7 @@ const PriceCalculator: React.FC = () => {
                   <IndianRupee className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400" />
                   <input 
                     type="number" 
+                    inputMode="decimal"
                     value={goldRate24K || ''} 
                     onChange={(e) => setGoldRate24K(Number(e.target.value))}
                     className="w-full bg-neutral-50 dark:bg-neutral-800 border-none rounded-2xl p-4 pl-12 text-lg font-semibold focus:ring-2 focus:ring-amber-500"
@@ -413,6 +415,7 @@ const PriceCalculator: React.FC = () => {
                 <Scale className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400" />
                 <input 
                   type="number" 
+                  inputMode="decimal"
                   value={weight || ''} 
                   onChange={(e) => setWeight(Number(e.target.value))}
                   className="w-full bg-neutral-50 dark:bg-neutral-800 border-none rounded-2xl p-4 pl-12 text-lg font-semibold focus:ring-2 focus:ring-amber-500"
@@ -442,6 +445,7 @@ const PriceCalculator: React.FC = () => {
                 <IndianRupee className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400" />
                 <input 
                   type="number" 
+                  inputMode="decimal"
                   value={goldRate24K || ''} 
                   onChange={(e) => setGoldRate24K(Number(e.target.value))}
                   className="w-full bg-neutral-50 dark:bg-neutral-800 border-none rounded-2xl p-4 pl-12 text-lg font-semibold focus:ring-2 focus:ring-amber-500"
@@ -466,6 +470,7 @@ const PriceCalculator: React.FC = () => {
                   <Percent className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400" />
                   <input 
                     type="number" 
+                    inputMode="decimal"
                     value={purity || ''} 
                     onChange={(e) => setPurity(Number(e.target.value))}
                     placeholder="Purity %"
@@ -492,6 +497,7 @@ const PriceCalculator: React.FC = () => {
                 <Percent className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400" />
                 <input 
                   type="number" 
+                  inputMode="decimal"
                   value={wastagePercent || ''} 
                   onChange={(e) => setWastagePercent(Number(e.target.value))}
                   className="w-full bg-neutral-50 dark:bg-neutral-800 border-none rounded-2xl p-4 pl-12 text-lg font-semibold focus:ring-2 focus:ring-amber-500"
@@ -519,6 +525,7 @@ const PriceCalculator: React.FC = () => {
               </div>
               <input 
                 type="number" 
+                inputMode="decimal"
                 value={makingChargeValue || ''} 
                 onChange={(e) => setMakingChargeValue(Number(e.target.value))}
                 className="w-full bg-neutral-50 dark:bg-neutral-800 border-none rounded-2xl p-4 text-lg font-semibold focus:ring-2 focus:ring-amber-500"
@@ -529,6 +536,7 @@ const PriceCalculator: React.FC = () => {
               <label className="text-xs font-bold text-neutral-400 uppercase tracking-wider">{t('kdm_charges')} (₹)</label>
               <input 
                 type="number" 
+                inputMode="decimal"
                 value={kdmCharges || ''} 
                 onChange={(e) => setKdmCharges(Number(e.target.value))}
                 className="w-full bg-neutral-50 dark:bg-neutral-800 border-none rounded-2xl p-4 text-lg font-semibold focus:ring-2 focus:ring-amber-500"

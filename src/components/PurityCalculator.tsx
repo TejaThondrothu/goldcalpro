@@ -81,39 +81,40 @@ const PurityCalculator: React.FC = () => {
       animate={{ opacity: 1, y: 0 }}
       className="space-y-6"
     >
-      <div className="flex items-center gap-3 mb-8">
-        <div className="p-3 bg-amber-100 dark:bg-amber-900/30 rounded-2xl">
+      <div className="flex flex-col md:flex-row md:items-center gap-3 mb-8">
+        <div className="p-3 bg-amber-100 dark:bg-amber-900/30 rounded-2xl w-fit">
           <Scale className="text-amber-600 dark:text-amber-400 w-6 h-6" />
         </div>
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">{t('purity_calc')}</h2>
-          <p className="text-neutral-500 text-sm">Calculate actual gold content from gross weight</p>
+          <h2 className="text-xl md:text-2xl font-bold tracking-tight">{t('purity_calc')}</h2>
+          <p className="text-neutral-500 text-xs md:text-sm">Calculate actual gold content from gross weight</p>
         </div>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-8">
-        <div className="bg-white dark:bg-neutral-900 p-6 rounded-3xl border dark:border-neutral-800 shadow-sm space-y-6">
+      <div className="grid md:grid-cols-2 gap-6 md:gap-8">
+        <div className="bg-white dark:bg-neutral-900 p-5 md:p-6 rounded-3xl border dark:border-neutral-800 shadow-sm space-y-6">
           <div className="space-y-2">
-            <label className="text-sm font-medium text-neutral-500">{t('weight')}</label>
+            <label className="text-xs font-bold text-neutral-400 uppercase tracking-wider">{t('weight')} (g)</label>
             <input 
               type="number" 
+              inputMode="decimal"
               value={weight || ''} 
               onChange={(e) => setWeight(Number(e.target.value))}
               placeholder="0.00"
-              className="w-full bg-neutral-50 dark:bg-neutral-800 border-none rounded-2xl p-4 text-xl font-semibold focus:ring-2 focus:ring-amber-500 transition-all"
+              className="w-full bg-neutral-50 dark:bg-neutral-800 border-none rounded-2xl p-4 text-lg md:text-xl font-semibold focus:ring-2 focus:ring-amber-500 transition-all"
             />
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium text-neutral-500">{t('purity')} (%)</label>
-            <div className="flex gap-2 mb-2 overflow-x-auto pb-2">
+            <label className="text-xs font-bold text-neutral-400 uppercase tracking-wider">{t('purity')} (%)</label>
+            <div className="flex gap-2 mb-2 overflow-x-auto pb-2 no-scrollbar">
               {[99.9, 91.6, 75.0, 58.5].map((val) => (
                 <button
                   key={val}
                   onClick={() => setPurity(val)}
-                  className={`px-4 py-2 rounded-xl text-xs font-medium transition-all whitespace-nowrap ${
+                  className={`px-4 py-2 rounded-xl text-[10px] md:text-xs font-bold transition-all whitespace-nowrap ${
                     purity === val 
-                      ? 'bg-amber-500 text-white' 
+                      ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/20' 
                       : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400'
                   }`}
                 >
@@ -123,20 +124,21 @@ const PurityCalculator: React.FC = () => {
             </div>
             <input 
               type="number" 
+              inputMode="decimal"
               value={purity || ''} 
               onChange={(e) => setPurity(Number(e.target.value))}
               placeholder="0.00"
-              className="w-full bg-neutral-50 dark:bg-neutral-800 border-none rounded-2xl p-4 text-xl font-semibold focus:ring-2 focus:ring-amber-500 transition-all"
+              className="w-full bg-neutral-50 dark:bg-neutral-800 border-none rounded-2xl p-4 text-lg md:text-xl font-semibold focus:ring-2 focus:ring-amber-500 transition-all"
             />
           </div>
         </div>
 
-        <div className="bg-amber-500 text-white p-8 rounded-3xl flex flex-col justify-center items-center text-center shadow-xl shadow-amber-500/20 relative overflow-hidden">
-          <div className="relative z-10">
-            <span className="text-amber-100 text-sm font-medium mb-2 uppercase tracking-widest">{t('pure_gold')}</span>
-            <div className="flex items-baseline gap-2">
-              <span className="text-6xl font-black tracking-tighter">{pureGold}</span>
-              <span className="text-2xl font-bold opacity-80">g</span>
+        <div className="bg-amber-500 text-white p-6 md:p-8 rounded-[2.5rem] flex flex-col justify-center items-center text-center shadow-xl shadow-amber-500/20 relative overflow-hidden">
+          <div className="relative z-10 w-full">
+            <span className="text-amber-100 text-[10px] md:text-xs font-bold mb-2 uppercase tracking-widest block">{t('pure_gold')}</span>
+            <div className="flex items-baseline justify-center gap-2">
+              <span className="text-4xl md:text-6xl font-black tracking-tighter truncate max-w-full">{pureGold}</span>
+              <span className="text-xl md:text-2xl font-bold opacity-80">g</span>
             </div>
             
             {/* Gold Bar Visualization */}

@@ -105,45 +105,45 @@ const Dashboard: React.FC = () => {
   ];
 
   return (
-    <div className="space-y-8">
-      <header className="space-y-2">
-        <h2 className="text-3xl font-black tracking-tight">Hello, {profile?.displayName || user?.displayName}</h2>
-        <p className="text-neutral-500">Welcome back to your gold intelligence dashboard.</p>
+    <div className="space-y-6 md:space-y-8 w-full">
+      <header className="space-y-1 md:space-y-2">
+        <h2 className="text-2xl md:text-3xl font-black tracking-tight">Hello, {profile?.displayName || user?.displayName}</h2>
+        <p className="text-sm md:text-base text-neutral-500">Welcome back to your gold intelligence dashboard.</p>
       </header>
 
-      <div className="grid lg:grid-cols-3 gap-6">
+      <div className="grid lg:grid-cols-3 gap-4 md:gap-6 w-full">
         {/* Gold Price Graph */}
-        <div className="lg:col-span-2">
+        <div className="lg:col-span-2 overflow-hidden w-[285px] lg:w-full mx-auto lg:mx-0">
           <GoldPriceGraph />
         </div>
 
         {/* Recent Activity */}
-        <div className="bg-white dark:bg-neutral-900 p-8 rounded-[2.5rem] border dark:border-neutral-800 shadow-sm space-y-6">
+        <div className="bg-white dark:bg-neutral-900 p-6 md:p-8 rounded-[2rem] md:rounded-[2.5rem] border dark:border-neutral-800 shadow-sm space-y-4 md:space-y-6">
           <div className="flex items-center justify-between">
-            <h3 className="font-bold text-lg">Recent Calcs</h3>
-            <Clock className="w-5 h-5 text-neutral-400" />
+            <h3 className="font-bold text-base md:text-lg">Recent Calcs</h3>
+            <Clock className="w-4 h-4 md:w-5 md:h-5 text-neutral-400" />
           </div>
-          <div className="space-y-4">
+          <div className="space-y-3 md:space-y-4">
             {recentCalcs.length > 0 ? (
               recentCalcs.map((item) => (
-                <div key={item.id} className="flex items-center justify-between p-3 bg-neutral-50 dark:bg-neutral-800 rounded-2xl">
-                  <div>
-                    <p className="text-sm font-bold">₹{item.totalPrice.toLocaleString()}</p>
-                    <p className="text-[10px] text-neutral-400">{item.weight}g • {item.createdAt?.toDate().toLocaleDateString()}</p>
+                <div key={item.id} className="flex items-center justify-between p-3 bg-neutral-50 dark:bg-neutral-800 rounded-xl md:rounded-2xl">
+                  <div className="min-w-0 flex-1 mr-2">
+                    <p className="text-sm font-bold truncate">₹{item.totalPrice.toLocaleString()}</p>
+                    <p className="text-[10px] text-neutral-400 truncate">{item.weight}g • {item.createdAt?.toDate().toLocaleDateString()}</p>
                   </div>
-                  <Link to="/price" className="text-amber-500">
+                  <Link to="/price" className="text-amber-500 shrink-0">
                     <ArrowRight className="w-4 h-4" />
                   </Link>
                 </div>
               ))
             ) : (
-              <p className="text-xs text-neutral-400 text-center py-8">No calculations yet.</p>
+              <p className="text-[10px] md:text-xs text-neutral-400 text-center py-6 md:py-8">No calculations yet.</p>
             )}
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
         {quickActions.map((action, i) => (
           <Link 
             key={i} 

@@ -31,9 +31,24 @@ const GoldPriceGraph: React.FC = () => {
 
   useEffect(() => {
     const fetchHistoricalData = async () => {
+      // Check cache first
+      const cachedData = localStorage.getItem('gold_historical_cache');
+      const cacheTime = localStorage.getItem('gold_historical_cache_time');
+      const ONE_HOUR = 60 * 60 * 1000;
+
+      if (cachedData && cacheTime && (Date.now() - Number(cacheTime) < ONE_HOUR)) {
+        setData(JSON.parse(cachedData));
+        setLoading(false);
+        return;
+      }
+
       setLoading(true);
       try {
-        const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
+        const apiKey = process.env.GEMINI_API_KEY;
+        if (!apiKey) {
+          throw new Error("GEMINI_API_KEY is not set in environment variables.");
+        }
+        const ai = new GoogleGenAI({ apiKey });
         const response = await ai.models.generateContent({
           model: "gemini-3-flash-preview",
           contents: `Provide the historical gold rates in India for the last 7 days (including today) for 24K and 22K gold per 10 grams. 
@@ -65,22 +80,36 @@ const GoldPriceGraph: React.FC = () => {
         }));
         
         setData(processedData);
-      } catch (err) {
+        // Update cache
+        localStorage.setItem('gold_historical_cache', JSON.stringify(processedData));
+        localStorage.setItem('gold_historical_cache_time', Date.now().toString());
+      } catch (err: any) {
         console.error("Failed to fetch historical gold data:", err);
-        setError("Could not load historical data. Showing estimates.");
-        // Fallback mock data if API fails
-        const mockData = Array.from({ length: 7 }).map((_, i) => {
-          const base24 = 75000 + Math.random() * 2000 - 1000;
-          const base22 = base24 * 0.916;
-          return {
-            date: `Day ${i + 1}`,
-            rate24K: Math.round(base24),
-            rate22K: Math.round(base22),
-            tola24K: Math.round(base24 * (TOLA_WEIGHT / 10)),
-            tola22K: Math.round(base22 * (TOLA_WEIGHT / 10))
-          };
-        });
-        setData(mockData);
+        
+        if (err.message?.includes('429') || err.status === 429) {
+          setError("API Rate limit exceeded. Showing cached or estimated data.");
+        } else {
+          setError("Could not load historical data. Showing estimates.");
+        }
+
+        // Use cache even if expired if API fails
+        if (cachedData) {
+          setData(JSON.parse(cachedData));
+        } else {
+          // Fallback mock data if API fails and no cache
+          const mockData = Array.from({ length: 7 }).map((_, i) => {
+            const base24 = 75000 + Math.random() * 2000 - 1000;
+            const base22 = base24 * 0.916;
+            return {
+              date: `Day ${i + 1}`,
+              rate24K: Math.round(base24),
+              rate22K: Math.round(base22),
+              tola24K: Math.round(base24 * (TOLA_WEIGHT / 10)),
+              tola22K: Math.round(base22 * (TOLA_WEIGHT / 10))
+            };
+          });
+          setData(mockData);
+        }
       } finally {
         setLoading(false);
       }
@@ -105,11 +134,11 @@ const GoldPriceGraph: React.FC = () => {
   const isUp = latest && previous ? latest.rate24K >= previous.rate24K : true;
 
   return (
-    <div className="bg-white dark:bg-neutral-900 p-8 rounded-[2.5rem] border dark:border-neutral-800 shadow-sm relative overflow-hidden">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+    <div className="w-full bg-white dark:bg-neutral-900 p-5 md:p-8 rounded-[2rem] md:rounded-[2.5rem] border dark:border-neutral-800 shadow-sm relative overflow-hidden">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 md:mb-8 gap-4">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-neutral-400 text-xs font-bold uppercase tracking-widest">
+            <span className="text-neutral-400 text-[10px] md:text-xs font-bold uppercase tracking-widest">
               Gold Price Trend (Last 7 Days)
             </span>
             <div className="group relative">
@@ -120,10 +149,10 @@ const GoldPriceGraph: React.FC = () => {
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <h4 className="text-4xl font-black tracking-tighter">
+            <h4 className="text-2xl md:text-4xl font-black tracking-tighter">
               ₹{viewMode === 'tola' ? latest.tola24K.toLocaleString() : latest.rate24K.toLocaleString()}
             </h4>
-            <div className={`flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-bold ${
+            <div className={`flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] md:text-xs font-bold ${
               isUp ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400' : 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400'
             }`}>
               {isUp ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
@@ -132,10 +161,10 @@ const GoldPriceGraph: React.FC = () => {
           </div>
         </div>
 
-        <div className="flex bg-neutral-100 dark:bg-neutral-800 p-1 rounded-xl">
+        <div className="flex bg-neutral-100 dark:bg-neutral-800 p-1 rounded-xl w-full md:w-auto">
           <button 
             onClick={() => setViewMode('tola')}
-            className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
+            className={`flex-1 md:flex-none px-4 py-2 rounded-lg text-[10px] md:text-xs font-bold transition-all ${
               viewMode === 'tola' ? 'bg-white dark:bg-neutral-700 shadow-sm text-neutral-900 dark:text-white' : 'text-neutral-400 hover:text-neutral-600'
             }`}
           >
@@ -143,7 +172,7 @@ const GoldPriceGraph: React.FC = () => {
           </button>
           <button 
             onClick={() => setViewMode('10g')}
-            className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
+            className={`flex-1 md:flex-none px-4 py-2 rounded-lg text-[10px] md:text-xs font-bold transition-all ${
               viewMode === '10g' ? 'bg-white dark:bg-neutral-700 shadow-sm text-neutral-900 dark:text-white' : 'text-neutral-400 hover:text-neutral-600'
             }`}
           >
@@ -152,7 +181,7 @@ const GoldPriceGraph: React.FC = () => {
         </div>
       </div>
 
-      <div className="h-64 w-full">
+      <div className="h-48 md:h-64 w-full">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
             <defs>

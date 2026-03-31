@@ -329,38 +329,37 @@ const History: React.FC = () => {
                 exit={{ opacity: 0, scale: 0.95 }}
                 className="group bg-white dark:bg-neutral-900 p-5 rounded-3xl border dark:border-neutral-800 shadow-sm hover:shadow-md transition-all flex flex-col md:flex-row md:items-center justify-between gap-4"
               >
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-amber-100 dark:bg-amber-900/30 rounded-2xl flex items-center justify-center text-amber-600 dark:text-amber-400 shrink-0">
-                    <IndianRupee className="w-6 h-6" />
+                <div className="flex items-center gap-3 md:gap-4 overflow-hidden">
+                  <div className="w-10 h-10 md:w-12 md:h-12 bg-amber-100 dark:bg-amber-900/30 rounded-xl md:rounded-2xl flex items-center justify-center text-amber-600 dark:text-amber-400 shrink-0">
+                    <IndianRupee className="w-5 h-5 md:w-6 md:h-6" />
                   </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <h4 className="font-black text-lg">₹{calc.totalPrice.toLocaleString()}</h4>
-                      <span className="text-[10px] font-bold px-2 py-0.5 bg-neutral-100 dark:bg-neutral-800 rounded-full text-neutral-500">
-                        {calc.customerName || 'No Name'}
-                      </span>
-                      {calc.ornamentName && (
-                        <span className="text-[10px] font-bold px-2 py-0.5 bg-amber-100 dark:bg-amber-900/30 rounded-full text-amber-600 dark:text-amber-400">
-                          {calc.ornamentName}
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-1 md:gap-2">
+                      <h4 className="font-black text-base md:text-lg whitespace-nowrap">₹{calc.totalPrice.toLocaleString()}</h4>
+                      <div className="flex flex-wrap gap-1">
+                        <span className="text-[8px] md:text-[10px] font-bold px-1.5 py-0.5 bg-neutral-100 dark:bg-neutral-800 rounded-full text-neutral-500 truncate max-w-[80px]">
+                          {calc.customerName || 'No Name'}
                         </span>
-                      )}
-                      {calc.isLocal && (
-                        <span className="text-[10px] font-bold px-2 py-0.5 bg-emerald-100 dark:bg-emerald-900/30 rounded-full text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-                          {calc.synced ? <Wifi className="w-2.5 h-2.5" /> : <WifiOff className="w-2.5 h-2.5" />}
-                          Local
-                        </span>
-                      )}
-                      <span className="text-[10px] font-bold px-2 py-0.5 bg-neutral-100 dark:bg-neutral-800 rounded-full text-neutral-500">
-                        ID: {calc.id.slice(0, 8)}
-                      </span>
+                        {calc.ornamentName && (
+                          <span className="text-[8px] md:text-[10px] font-bold px-1.5 py-0.5 bg-amber-100 dark:bg-amber-900/30 rounded-full text-amber-600 dark:text-amber-400 truncate max-w-[80px]">
+                            {calc.ornamentName}
+                          </span>
+                        )}
+                        {calc.isLocal && (
+                          <span className="text-[8px] md:text-[10px] font-bold px-1.5 py-0.5 bg-emerald-100 dark:bg-emerald-900/30 rounded-full text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                            {calc.synced ? <Wifi className="w-2 h-2" /> : <WifiOff className="w-2 h-2" />}
+                            Local
+                          </span>
+                        )}
+                      </div>
                     </div>
-                    <div className="flex items-center gap-3 text-xs text-neutral-400 mt-1">
+                    <div className="flex items-center gap-2 md:gap-3 text-[10px] md:text-xs text-neutral-400 mt-0.5">
                       <span className="flex items-center gap-1">
-                        <Calendar className="w-3 h-3" />
+                        <Calendar className="w-2.5 h-2.5 md:w-3 md:h-3" />
                         {calc.createdAt?.toDate().toLocaleDateString()}
                       </span>
                       <span className="flex items-center gap-1">
-                        <HistoryIcon className="w-3 h-3" />
+                        <HistoryIcon className="w-2.5 h-2.5 md:w-3 md:h-3" />
                         {calc.weight}g ({calc.purity}%)
                       </span>
                     </div>

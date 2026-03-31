@@ -147,7 +147,22 @@ const AdminPanel: React.FC = () => {
   const fetchLivePrice = async () => {
     setIsFetching(true);
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
+      // 1. Try the Free Proxy API first (to save Gemini quota)
+      const proxyResponse = await fetch('/api/gold-price');
+      if (proxyResponse.ok) {
+        const data = await proxyResponse.json();
+        setGoldRate24K(data.rate24K);
+        setGoldRate22K(data.rate22K);
+        alert(`Fetched live rates (Free API): 24K: ₹${data.rate24K}, 22K: ₹${data.rate22K}`);
+        return;
+      }
+
+      // 2. Fallback to Gemini if proxy fails
+      const apiKey = process.env.GEMINI_API_KEY;
+      if (!apiKey) {
+        throw new Error("GEMINI_API_KEY is not set in environment variables.");
+      }
+      const ai = new GoogleGenAI({ apiKey });
       const response = await ai.models.generateContent({
         model: "gemini-3-flash-preview",
         contents: "What is the current gold rate in India today for 24K and 22K gold per 10 grams? Return only a JSON object with 'rate24K' and 'rate22K' as numbers.",
@@ -255,19 +270,19 @@ const AdminPanel: React.FC = () => {
         </button>
       </div>
 
-      <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
         {stats.map((stat, i) => (
-          <div key={i} className="bg-white dark:bg-neutral-900 p-6 rounded-3xl border dark:border-neutral-800 shadow-sm">
-            <div className="flex justify-between items-start mb-4">
+          <div key={i} className="bg-white dark:bg-neutral-900 p-4 md:p-6 rounded-3xl border dark:border-neutral-800 shadow-sm">
+            <div className="flex justify-between items-start mb-2 md:mb-4">
               <div className={cn("p-2 rounded-xl bg-neutral-50 dark:bg-neutral-800", stat.color)}>
-                <stat.icon className="w-5 h-5" />
+                <stat.icon className="w-4 h-4 md:w-5 md:h-5" />
               </div>
-              <span className="text-[10px] font-bold text-emerald-500 flex items-center gap-1">
-                Live <ArrowUpRight className="w-3 h-3" />
+              <span className="text-[8px] md:text-[10px] font-bold text-emerald-500 flex items-center gap-1">
+                Live <ArrowUpRight className="w-2 h-2 md:w-3 md:h-3" />
               </span>
             </div>
-            <p className="text-neutral-400 text-xs font-bold uppercase tracking-wider">{stat.label}</p>
-            <h4 className="text-3xl font-black mt-1">{stat.value}</h4>
+            <p className="text-neutral-400 text-[10px] md:text-xs font-bold uppercase tracking-wider">{stat.label}</p>
+            <h4 className="text-xl md:text-3xl font-black mt-1">{stat.value}</h4>
           </div>
         ))}
       </div>
@@ -338,6 +353,7 @@ const AdminPanel: React.FC = () => {
                 <div className="relative">
                   <input 
                     type="number" 
+                    inputMode="decimal"
                     value={goldRate24K}
                     onChange={(e) => setGoldRate24K(Number(e.target.value))}
                     className="w-full bg-neutral-50 dark:bg-neutral-800 border-none rounded-2xl p-4 text-lg font-semibold focus:ring-2 focus:ring-amber-500"
@@ -347,6 +363,7 @@ const AdminPanel: React.FC = () => {
                 <div className="relative">
                   <input 
                     type="number" 
+                    inputMode="decimal"
                     value={Number((goldRate24K / 10).toFixed(2))}
                     onChange={(e) => setGoldRate24K(Number(e.target.value) * 10)}
                     className="w-full bg-neutral-50 dark:bg-neutral-800 border-none rounded-2xl p-4 text-lg font-semibold focus:ring-2 focus:ring-amber-500"
@@ -361,6 +378,7 @@ const AdminPanel: React.FC = () => {
                 <div className="relative">
                   <input 
                     type="number" 
+                    inputMode="decimal"
                     value={goldRate22K}
                     onChange={(e) => setGoldRate22K(Number(e.target.value))}
                     className="w-full bg-neutral-50 dark:bg-neutral-800 border-none rounded-2xl p-4 text-lg font-semibold focus:ring-2 focus:ring-amber-500"
@@ -370,6 +388,7 @@ const AdminPanel: React.FC = () => {
                 <div className="relative">
                   <input 
                     type="number" 
+                    inputMode="decimal"
                     value={Number((goldRate22K / 10).toFixed(2))}
                     onChange={(e) => setGoldRate22K(Number(e.target.value) * 10)}
                     className="w-full bg-neutral-50 dark:bg-neutral-800 border-none rounded-2xl p-4 text-lg font-semibold focus:ring-2 focus:ring-amber-500"

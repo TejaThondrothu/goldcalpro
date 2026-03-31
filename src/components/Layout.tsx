@@ -15,6 +15,7 @@ import {
   User as UserIcon,
   History as HistoryIcon
 } from 'lucide-react';
+import { motion } from 'motion/react';
 import { useLanguage } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
 import { useUser } from '../context/UserContext';
@@ -39,7 +40,7 @@ const Layout: React.FC = () => {
   return (
     <div className="min-h-screen bg-neutral-50 dark:bg-neutral-950 text-neutral-900 dark:text-neutral-100 transition-colors duration-300">
       {/* Sidebar / Bottom Nav */}
-      <aside className="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-neutral-900 border-t dark:border-neutral-800 md:top-0 md:bottom-0 md:w-64 md:border-t-0 md:border-r">
+      <aside className="fixed bottom-0 left-0 right-0 z-50 bg-white/80 dark:bg-neutral-900/80 backdrop-blur-lg border-t dark:border-neutral-800 md:top-0 md:bottom-0 md:w-64 md:border-t-0 md:border-r md:bg-white md:dark:bg-neutral-900">
         <div className="flex flex-col h-full">
           <div className="hidden md:flex items-center gap-2 p-6 border-b dark:border-neutral-800">
             <div className="w-8 h-8 bg-amber-500 rounded-lg flex items-center justify-center">
@@ -48,21 +49,27 @@ const Layout: React.FC = () => {
             <h1 className="font-bold text-xl tracking-tight">{t('app_title')}</h1>
           </div>
 
-          <nav className="flex md:flex-col items-center justify-around md:justify-start p-2 md:p-4 gap-1 overflow-x-auto">
+          <nav className="flex md:flex-col items-center justify-around md:justify-start p-1 md:p-4 gap-1 overflow-x-auto no-scrollbar">
             {navItems.map((item) => (
               <Link
                 key={item.path}
                 to={item.path}
                 className={cn(
-                  "flex flex-col md:flex-row items-center gap-1 md:gap-3 p-2 md:p-3 rounded-xl transition-all w-full",
+                  "flex flex-col md:flex-row items-center gap-1 md:gap-3 p-2 md:p-3 rounded-xl transition-all min-w-[64px] md:w-full",
                   location.pathname === item.path 
-                    ? "bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 font-medium" 
+                    ? "text-amber-600 dark:text-amber-400 font-bold md:bg-amber-100 md:dark:bg-amber-900/30" 
                     : "text-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-800",
-                  item.path === '/admin' && "mt-2 md:mt-6 border border-amber-500/30 bg-amber-50/50 dark:bg-amber-950/10"
+                  item.path === '/admin' && "md:mt-6 border md:border-amber-500/30 md:bg-amber-50/50 md:dark:bg-amber-950/10"
                 )}
               >
-                <item.icon className={cn("w-5 h-5", item.path === '/admin' && "text-amber-500")} />
-                <span className="text-[10px] md:text-sm">{item.label}</span>
+                <item.icon className={cn("w-6 h-6 md:w-5 md:h-5", item.path === '/admin' && "text-amber-500")} />
+                <span className="text-[9px] md:text-sm whitespace-nowrap">{item.label}</span>
+                {location.pathname === item.path && (
+                  <motion.div 
+                    layoutId="active-pill"
+                    className="absolute -top-1 w-1 h-1 bg-amber-500 rounded-full md:hidden"
+                  />
+                )}
               </Link>
             ))}
           </nav>
@@ -99,18 +106,23 @@ const Layout: React.FC = () => {
       </aside>
 
       {/* Main Content */}
-      <main className="pb-20 md:pb-0 md:pl-64 min-h-screen">
-        <header className="md:hidden flex items-center justify-between p-4 bg-white dark:bg-neutral-900 border-b dark:border-neutral-800 sticky top-0 z-40">
-          <h1 className="font-bold text-lg">{t('app_title')}</h1>
+      <main className="pb-24 md:pb-0 md:pl-64 min-h-screen">
+        <header className="md:hidden flex items-center justify-between p-4 bg-white/80 dark:bg-neutral-900/80 backdrop-blur-lg border-b dark:border-neutral-800 sticky top-0 z-40">
           <div className="flex items-center gap-2">
-            <button onClick={logout} className="p-2 rounded-lg bg-neutral-100 dark:bg-neutral-800">
-              <LogOut className="w-5 h-5" />
-            </button>
-            <button onClick={toggleDarkMode} className="p-2 rounded-lg bg-neutral-100 dark:bg-neutral-800">
+            <div className="w-6 h-6 bg-amber-500 rounded flex items-center justify-center">
+              <Scale className="text-white w-4 h-4" />
+            </div>
+            <h1 className="font-bold text-base tracking-tight">{t('app_title')}</h1>
+          </div>
+          <div className="flex items-center gap-1">
+            <button onClick={toggleDarkMode} className="p-2 rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors">
               {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
             </button>
-            <button onClick={() => setLanguage(language === 'en' ? 'te' : 'en')} className="p-2 rounded-lg bg-neutral-100 dark:bg-neutral-800">
+            <button onClick={() => setLanguage(language === 'en' ? 'te' : 'en')} className="p-2 rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors">
               <Languages className="w-5 h-5" />
+            </button>
+            <button onClick={logout} className="p-2 rounded-xl text-neutral-400 hover:text-red-500 transition-colors">
+              <LogOut className="w-5 h-5" />
             </button>
           </div>
         </header>
