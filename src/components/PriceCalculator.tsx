@@ -6,10 +6,11 @@ import { motion } from 'motion/react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { collection, addDoc, serverTimestamp, doc, onSnapshot } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, doc, onSnapshot, getDoc } from 'firebase/firestore';
 import { db, auth } from '../firebase';
 import { cn } from '../lib/utils';
 import { logAction } from '../lib/logger';
+import { saveLocalCalculation } from '../lib/db';
 
 enum OperationType {
   CREATE = 'create',
@@ -168,28 +169,45 @@ const PriceCalculator: React.FC = () => {
   const handleSave = async () => {
     if (!user) return;
     setIsSaving(true);
+    
+    const calcData = {
+      customerName,
+      ornamentName,
+      weight,
+      purity,
+      goldPrice: goldRate24K,
+      makingChargeType,
+      makingChargeValue,
+      wastagePercent,
+      kdmCharges,
+      goldPriceAmt: results.goldPrice,
+      makingChargesAmt: results.makingCharges,
+      wastagePrice: results.wastagePrice,
+      gstAmt: results.gst,
+      totalPrice: results.finalBill,
+      effectiveRate: results.effectiveRate,
+      userId: user.uid
+    };
+
     try {
-      await addDoc(collection(db, 'calculations'), {
-        customerName,
-        ornamentName,
-        weight,
-        purity,
-        goldPrice: goldRate24K,
-        makingChargeType,
-        makingChargeValue,
-        wastagePercent,
-        kdmCharges,
-        goldPriceAmt: results.goldPrice,
-        makingChargesAmt: results.makingCharges,
-        wastagePrice: results.wastagePrice,
-        gstAmt: results.gst,
-        totalPrice: results.finalBill,
-        effectiveRate: results.effectiveRate,
-        createdAt: serverTimestamp(),
-        userId: user.uid
+      // Always save to IndexedDB for offline access
+      const localId = crypto.randomUUID();
+      await saveLocalCalculation({
+        ...calcData,
+        id: localId,
+        createdAt: Date.now(),
+        synced: navigator.onLine
       });
-      await logAction(user.displayName || 'User', `Saved new gold calculation: ₹${results.finalBill.toLocaleString()}`);
-      alert('Calculation saved successfully!');
+
+      if (navigator.onLine) {
+        await addDoc(collection(db, 'calculations'), {
+          ...calcData,
+          createdAt: serverTimestamp(),
+        });
+        await logAction(user.displayName || 'User', `Saved new gold calculation: ₹${results.finalBill.toLocaleString()}`);
+      }
+      
+      alert(navigator.onLine ? 'Calculation saved successfully!' : 'Saved locally (Offline). Will sync when online.');
     } catch (error) {
       console.error("Save failed:", error);
       alert('Failed to save calculation.');

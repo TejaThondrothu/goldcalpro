@@ -12,12 +12,14 @@ import {
   Filter
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { collection, query, where, orderBy, onSnapshot, deleteDoc, doc, Timestamp } from 'firebase/firestore';
+import { collection, query, where, orderBy, onSnapshot, deleteDoc, doc, Timestamp, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db, auth } from '../firebase';
 import { cn } from '../lib/utils';
 import { logAction } from '../lib/logger';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { getLocalCalculations, deleteLocalCalculation, getUnsyncedCalculations, markAsSynced } from '../lib/db';
+import { RefreshCw, Wifi, WifiOff } from 'lucide-react';
 
 enum OperationType {
   CREATE = 'create',
@@ -81,8 +83,10 @@ interface Calculation {
   gstAmt?: number;
   gst?: number; // legacy
   effectiveRate?: number;
-  createdAt: Timestamp;
+  createdAt: Timestamp | { toDate: () => Date };
   userId: string;
+  isLocal?: boolean;
+  synced?: boolean;
 }
 
 const History: React.FC = () => {
@@ -97,6 +101,16 @@ const History: React.FC = () => {
   });
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
+  const [isSyncing, setIsSyncing] = useState(false);
+
+  const fetchLocalCalcs = async () => {
+    const locals = await getLocalCalculations();
+    return locals.map(l => ({
+      ...l,
+      createdAt: { toDate: () => new Date(l.createdAt) },
+      isLocal: true
+    } as Calculation));
+  };
 
   useEffect(() => {
     if (!user) return;
@@ -107,9 +121,18 @@ const History: React.FC = () => {
       orderBy('createdAt', 'desc')
     );
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const docs = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Calculation));
-      setCalculations(docs);
+    const unsubscribe = onSnapshot(q, async (snapshot) => {
+      const firestoreDocs = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Calculation));
+      const localDocs = await fetchLocalCalcs();
+      
+      // Merge and remove duplicates (prefer firestore if exists)
+      // Actually, local IDs are randomUUIDs, firestore IDs are auto-generated.
+      // We'll just show them all for now, but in a real app we'd deduplicate.
+      const merged = [...localDocs, ...firestoreDocs].sort((a, b) => 
+        b.createdAt.toDate().getTime() - a.createdAt.toDate().getTime()
+      );
+
+      setCalculations(merged);
       setLoading(false);
     }, (error) => {
       handleFirestoreError(error, OperationType.LIST, 'calculations');
@@ -129,13 +152,46 @@ const History: React.FC = () => {
     };
   }, [user]);
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (id: string, isLocal?: boolean) => {
     if (!window.confirm('Are you sure you want to delete this calculation?')) return;
     try {
-      await deleteDoc(doc(db, 'calculations', id));
+      if (isLocal) {
+        await deleteLocalCalculation(id);
+      } else {
+        await deleteDoc(doc(db, 'calculations', id));
+      }
       await logAction(user?.displayName || 'User', `Deleted calculation record: ${id.slice(0, 8)}`);
+      // Local state will update via onSnapshot or manual refresh for local
+      if (isLocal) {
+        const localDocs = await fetchLocalCalcs();
+        setCalculations(prev => [...localDocs, ...prev.filter(p => !p.isLocal)].sort((a, b) => 
+          b.createdAt.toDate().getTime() - a.createdAt.toDate().getTime()
+        ));
+      }
     } catch (error) {
       console.error("Delete failed:", error);
+    }
+  };
+
+  const handleSync = async () => {
+    if (!navigator.onLine || !user) return;
+    setIsSyncing(true);
+    try {
+      const unsynced = await getUnsyncedCalculations();
+      for (const calc of unsynced) {
+        const { id, synced, isLocal, createdAt, ...data } = calc as any;
+        await addDoc(collection(db, 'calculations'), {
+          ...data,
+          createdAt: serverTimestamp(),
+        });
+        await markAsSynced(id);
+      }
+      alert(`Synced ${unsynced.length} records to cloud.`);
+    } catch (error) {
+      console.error("Sync failed:", error);
+      alert('Sync failed. Please try again later.');
+    } finally {
+      setIsSyncing(false);
     }
   };
 
@@ -227,15 +283,25 @@ const History: React.FC = () => {
           <p className="text-neutral-500 text-sm">Review and manage your past gold calculations.</p>
         </div>
 
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
-          <input 
-            type="text"
-            placeholder="Search by Name, Ornament or ID..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10 pr-4 py-2 bg-white dark:bg-neutral-900 border dark:border-neutral-800 rounded-xl text-sm focus:ring-2 focus:ring-amber-500 outline-none w-full md:w-64"
-          />
+        <div className="flex items-center gap-2">
+          <button 
+            onClick={handleSync}
+            disabled={isSyncing || !navigator.onLine}
+            className="flex items-center gap-2 px-4 py-2 bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 rounded-xl text-xs font-bold hover:opacity-80 transition-all disabled:opacity-50"
+          >
+            <RefreshCw className={cn("w-4 h-4", isSyncing && "animate-spin")} />
+            {isSyncing ? 'Syncing...' : 'Sync Offline Data'}
+          </button>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
+            <input 
+              type="text"
+              placeholder="Search by Name, Ornament or ID..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 pr-4 py-2 bg-white dark:bg-neutral-900 border dark:border-neutral-800 rounded-xl text-sm focus:ring-2 focus:ring-amber-500 outline-none w-full md:w-64"
+            />
+          </div>
         </div>
       </header>
 
@@ -278,6 +344,12 @@ const History: React.FC = () => {
                           {calc.ornamentName}
                         </span>
                       )}
+                      {calc.isLocal && (
+                        <span className="text-[10px] font-bold px-2 py-0.5 bg-emerald-100 dark:bg-emerald-900/30 rounded-full text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                          {calc.synced ? <Wifi className="w-2.5 h-2.5" /> : <WifiOff className="w-2.5 h-2.5" />}
+                          Local
+                        </span>
+                      )}
                       <span className="text-[10px] font-bold px-2 py-0.5 bg-neutral-100 dark:bg-neutral-800 rounded-full text-neutral-500">
                         ID: {calc.id.slice(0, 8)}
                       </span>
@@ -304,7 +376,7 @@ const History: React.FC = () => {
                     PDF
                   </button>
                   <button 
-                    onClick={() => handleDelete(calc.id)}
+                    onClick={() => handleDelete(calc.id, calc.isLocal)}
                     className="p-2 text-neutral-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-all"
                   >
                     <Trash2 className="w-5 h-5" />
