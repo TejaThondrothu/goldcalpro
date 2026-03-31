@@ -1,0 +1,90 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: users
+    // Document ID: userId
+    // Fields:
+    //   - displayName: string
+    //   - email: string
+    //   - role: string ('admin' | 'user')
+    //
+    // Collection: calculations
+    // Document ID: calcId
+    // Fields:
+    //   - weight: number
+    //   - purity: number
+    //   - goldPrice: number
+    //   - makingCharges: number
+    //   - gst: number
+    //   - totalPrice: number
+    //   - createdAt: timestamp
+    //   - userId: string
+    //
+    // ===============================================================
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() &&
+        (request.auth.token.email == "thondrothuteja1997@gmail.com" ||
+         (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'));
+    }
+
+    function isValidUser(data) {
+      return data.keys().hasAll(['displayName', 'email', 'role']) &&
+             data.displayName is string && data.displayName.size() > 0 && data.displayName.size() < 100 &&
+             data.email is string && data.email.matches('^.+@.+$') &&
+             data.role in ['admin', 'user'];
+    }
+
+    function isValidCalculation(data) {
+      return data.keys().hasAll(['weight', 'purity', 'goldPrice', 'totalPrice', 'createdAt', 'userId']) &&
+             data.weight is number && data.weight > 0 &&
+             data.purity is number && data.purity > 0 && data.purity <= 100 &&
+             data.goldPrice is number && data.goldPrice > 0 &&
+             data.totalPrice is number && data.totalPrice > 0 &&
+             data.createdAt is timestamp &&
+             data.userId == request.auth.uid;
+    }
+
+    match /users/{userId} {
+      allow get: if isOwner(userId) || isAdmin();
+      allow list: if isAdmin();
+      allow create: if isOwner(userId) && isValidUser(request.resource.data) && request.resource.data.role == 'user';
+      allow update: if (isOwner(userId) && request.resource.data.role == resource.data.role && isValidUser(request.resource.data)) || isAdmin();
+    }
+
+    match /calculations/{calcId} {
+      allow get: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow list: if isAuthenticated() && (request.query.limit <= 100 && (request.query.filters.userId == request.auth.uid || isAdmin()));
+      allow create: if isAuthenticated() && isValidCalculation(request.resource.data);
+      allow delete: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin());
+    }
+
+    match /config/{configId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    match /logs/{logId} {
+      allow list: if isAdmin();
+      allow get: if isAdmin();
+      allow create: if isAuthenticated() && 
+                    request.resource.data.keys().hasAll(['user', 'action', 'createdAt']) &&
+                    request.resource.data.user is string &&
+                    request.resource.data.action is string &&
+                    request.resource.data.createdAt is timestamp;
+    }
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "name": "GoldCalc Pro",
+  "short_name": "GoldCalc",
+  "description": "Professional Gold Jewellery Calculator",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#f59e0b",
+  "icons": [
+    {
+      "src": "https://picsum.photos/seed/gold/192/192",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://picsum.photos/seed/gold/512/512",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

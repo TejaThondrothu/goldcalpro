@@ -1,0 +1,5 @@
+{
+  "name": "GoldCalc - Professional Jewellery Calculator",
+  "description": "A production-ready gold jewellery calculator with purity conversion, price estimation, fraud detection, and admin analytics.",
+  "requestFramePermissions": []
+}

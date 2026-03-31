@@ -1,0 +1,71 @@
+{
+  "entities": {
+    "Calculation": {
+      "title": "Calculation",
+      "description": "A jewellery calculation record.",
+      "type": "object",
+      "properties": {
+        "weight": { "type": "number" },
+        "purity": { "type": "number" },
+        "goldPrice": { "type": "number" },
+        "makingCharges": { "type": "number" },
+        "gst": { "type": "number" },
+        "totalPrice": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "userId": { "type": "string" }
+      },
+      "required": ["weight", "purity", "goldPrice", "totalPrice", "createdAt", "userId"]
+    },
+    "User": {
+      "title": "User",
+      "description": "A user profile.",
+      "type": "object",
+      "properties": {
+        "displayName": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "role": { "type": "string", "enum": ["admin", "user"] }
+      },
+      "required": ["displayName", "email", "role"]
+    },
+    "Config": {
+      "title": "Config",
+      "description": "Global application configuration.",
+      "type": "object",
+      "properties": {
+        "goldRate24K": { "type": "number" },
+        "goldRate22K": { "type": "number" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["goldRate24K", "goldRate22K", "updatedAt"]
+    },
+    "Log": {
+      "title": "Log",
+      "description": "System activity log.",
+      "type": "object",
+      "properties": {
+        "user": { "type": "string" },
+        "action": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["user", "action", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/calculations/{calcId}": {
+      "schema": "Calculation",
+      "description": "A collection of calculation history."
+    },
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "A collection of user profiles."
+    },
+    "/config/{configId}": {
+      "schema": "Config",
+      "description": "Global configuration documents."
+    },
+    "/logs/{logId}": {
+      "schema": "Log",
+      "description": "System activity logs."
+    }
+  }
+}
